@@ -1,0 +1,10 @@
+.App {
+  display: flex;
+}
+
+html, body, #root, .App, .notes, .tags, .content {
+  height: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  overflow: hidden;
+}
