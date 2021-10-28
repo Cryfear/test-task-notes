@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "http://localhost:3004",
+  baseURL: "https://my-json-server.typicode.com/Cryfear/test-task-notes",
   withCredentials: true
 });
 
