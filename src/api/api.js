@@ -8,7 +8,7 @@ const instance = axios.create({
 export const Api = {
   getNotes({page}) {
     return instance
-      .get(`/notes?_sort=id&_order=desc&_page=${page}&_limit=30`)
+      .get(`/notes?_sort=id&_order=desc&_page=${page}&_limit=25`)
       .then((data) => data.data)
       .catch((err) => err);
   },

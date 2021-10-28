@@ -16,5 +16,5 @@ export const textareaOnChange = ({e, setTextAreaValue, setTags, generatorRef}) =
 
   HighlightTags(generatorRef, e.currentTarget.value); // обновляем подсветку
 
-  setTags(Array.from(new Set(withoutHashSymbol)));
+  setTags(Array.from(new Set(withoutHashSymbol))); // убираем дубликаты и устанавливаем значение для массива тегов
 }

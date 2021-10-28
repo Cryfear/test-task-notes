@@ -1,19 +1,17 @@
-import { updateNote } from "../App.model";
 import { HighlightTags } from "./HighlightTags";
 
-export const removeTagsHandler = ({tag, allTags, setTags, noteId, noteName, textAreaValue, setTextAreaValue, generatorRef}) => {
+export const removeTagsHandler = ({tag, allTags, setTags, textAreaValue, setTextAreaValue, generatorRef}) => {
   const tags = allTags.filter((item) => item !== tag);
+  // удаляет из массива tags все ненужные теги
 
   const regexp = new RegExp(`${'#' + tag}(?=(\\s|#|$))`, 'g');
   const content = textAreaValue.replace(regexp, '').replace(/\s+/g, ' ').trim();
-  // удалили все нужные хештеги
+  // удаляет из контента все теги
 
   setTags(tags);
   setTextAreaValue(content);
 
-  HighlightTags(generatorRef, textAreaValue)
+  // вносим изменения в приложении
 
-  // вносим изменения в приложении и на сервере
-
-  return updateNote({id: noteId, changes: {tags, content, name: noteName}})
+  HighlightTags(generatorRef, textAreaValue);
 }

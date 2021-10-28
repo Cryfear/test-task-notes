@@ -1,49 +1,66 @@
-import React, { useRef, useState } from 'react';
-import { textareaOnChange } from "../../../../utils/textareaOnChange";
+import React, { useEffect, useRef, useState } from 'react';
 import { addNote } from "../../../../App.model";
+import { HighlightTags } from "../../../../utils/HighlightTags";
+import { useBottomTags } from "../../../../hooks/useBottomTags";
+import { NoteContentTemplate } from "../NoteContentTemplate/NoteContentTemplate";
 
 export const CreatingNote = () => {
-  const [textAreaValue, setTextAreaValue] = useState('');
-  const [noteNameValue, setNoteNameValue] = useState('');
-  const [tags, setTags] = useState('');
-
   const generatorRef = useRef(null);
 
-  const bottomTags = tags.length > 0 ? "#" + tags.join(' #') : null;
+  const [noteNameValue, setNoteNameValue] = useState('');
+  const [textAreaValue, setTextAreaValue] = useState('');
+  const [tags, setTags] = useState([]);
+  const [addTagValue, setAddTagValue] = useState('');
 
-  const onAddButton = () => {
-    return addNote({
-      name: noteNameValue,
-      content: textAreaValue,
-      tags,
-    })
+  useEffect(() => {
+    generatorRef.current.innerText = '';
+    // при измении значения в textarea генерировать текст в div
+    HighlightTags(generatorRef, textAreaValue);
+  }, [textAreaValue])
+
+
+  const bottomTags = useBottomTags({
+    tags,
+    setTags,
+    textAreaValue,
+    setTextAreaValue,
+    generatorRef
+  }); // создаем реакт элементы тегов под текстареей
+
+  const Handlers = {
+    onAddNoteHandler: () => {
+      return addNote({
+        name: noteNameValue,
+        content: textAreaValue,
+        tags,
+      })
+    },
+
+    onAddTagHandler: () => {
+      if (addTagValue.length > 0) {
+        setTags(Array.from(new Set([...tags, addTagValue])));
+        setTextAreaValue(textAreaValue + (tags.length > 0 ? ' #' : '#') + addTagValue);
+      }
+    },
+
+    onChangeAddTagHandler: (e) => setAddTagValue(e.currentTarget.value.replace(/\s|#/g, '')),
+    onScrollTextareaHandler: (e) => generatorRef.current.scrollTop = e.target.scrollTop,
   }
 
   return (
     <div className="content">
-      <h2 className="content__title">Content</h2>
-      <input
-        type="text"
-        value={noteNameValue}
-        onChange={(e) => setNoteNameValue(e.currentTarget.value)}
-        placeholder={"Create a name for a note"} className="content__note-name"/>
-      <div className="generator-wrapper">
-          <textarea
-            id="note_text"
-            value={textAreaValue}
-            className="content__textarea"
-            placeholder={'Text...'}
-            onChange={(e) => textareaOnChange({e, setTextAreaValue, setTags, generatorRef})}
-          />
-        <div
-          id={'text-generator'}
-          ref={generatorRef}
-          contentEditable={true}
-          className="content__textarea-generator">
-        </div>
-      </div>
-      <button onClick={onAddButton} className="content__btn">Add note</button>
-      <div className="content__note-tags">{bottomTags}</div>
+      <NoteContentTemplate
+        noteNameValue={noteNameValue}
+        setNoteNameValue={setNoteNameValue}
+        Handlers={Handlers}
+        textAreaValue={textAreaValue}
+        setTextAreaValue={setTextAreaValue}
+        setTags={setTags}
+        generatorRef={generatorRef}
+        bottomTags={bottomTags}
+        addTagValue={addTagValue}
+      />
+      <button onClick={Handlers.onAddNoteHandler} className="content__btn">Add note</button>
     </div>
   )
 }

@@ -5,8 +5,8 @@ export const onSearchScrollFx = createEffect(
   // Поиск по скроллу
   async ({searchValue, page}) => {
     return {
-      notes: await Api.getNotesByTag({searchValue, page: page + 1}),
-      page
+      notes: await Api.getNotesByTag({searchValue, page}),
+      page: page
     }
   }
 );
@@ -18,30 +18,36 @@ export const setSearchNotesFx = createEffect(async ({searchValue, page}) => {
 
 export const notesInitialization = createEffect(async () => {
   // Инициализация заметок
+  clearNotes();
   return await Api.getNotes({page: 1}).then((data) => data);
 });
 
-export const addNote = createEffect(async ({name, content, tags, id}) => {
+export const addNote = createEffect(async ({name, content, tags}) => {
+  // добавление заметки
   notesInitialization();
-  return await api.addNote({name, content, tags, id});
+  return await api.addNote({name: name.length > 0 ? name : 'unnamed', content, tags});
 });
 
 export const deleteNote = createEffect(({id}) => {
-  // Добавление заметки
+  // удаление заметки
   Api.deleteNote({id});
 
   return {id};
 });
 
 export const updateNote = createEffect(async ({id, changes}) => {
+  // обновление заметки
   Api.updateNote({id, changes}).then(() => notesInitialization());
 });
 
 export const openNote = createEffect(async ({id}) => {
+  // просмотр заметки
   return await Api.getNote({id})
 });
 
 export const emptyContentSwitcher = createEffect(() => true)
+export const clearNotes = createEffect(() => true)
+// при открытии приложения, человек решает или создать или просмотреть заметку, это флаг пустого контента
 
 export const appStore = createStore({
   notes: [],
@@ -51,7 +57,7 @@ export const appStore = createStore({
     tags: [],
     name: null
   },
-  searchPage: 0,
+  searchPage: 1,
   isEndSearch: false,
 
   isEmptyContent: true, // there
@@ -59,8 +65,7 @@ export const appStore = createStore({
   isEditingNote: false // only one TRUE onetime
 })
   .on(openNote.doneData, (state, note) => {
-    console.log(note)
-    if(note) {
+    if (note) {
       return {
         ...state,
         openedNote: {...note},
@@ -129,7 +134,7 @@ export const appStore = createStore({
     };
   })
   .on(onSearchScrollFx.doneData, (state, {notes, page}) => {
-    if (notes && notes.length > 0) {
+    if (notes && notes.length > 0 && state.searchPage !== page) {
       return {
         ...state,
         notes: [...state.notes, ...notes],
@@ -140,9 +145,18 @@ export const appStore = createStore({
     return {...state, isEndSearch: true};
   })
   .on(emptyContentSwitcher.done, (state) => {
+    if(state.isEmptyContent) {
+      return {
+        ...state,
+        isEmptyContent: false,
+        isCreatingNote: true,
+        isEditingNote: false
+      }
+    }
     return {
       ...state,
       isEmptyContent: false,
-      isCreatingNote: true
+      isCreatingNote: true,
+      isEditingNote: false
     }
-  });
+  })
