@@ -8,7 +8,18 @@ const instance = axios.create({
 export const Api = {
   getNotes({page}) {
     return instance
-      .get(`/notes?_page=${page}&_limit=30`)
+      .get(`/notes?_sort=id&_order=desc&_page=${page}&_limit=30`)
+      .then((data) => data.data)
+      .catch((err) => err);
+  },
+  getNote({id}) {
+    return instance
+      .get(`/notes?id=${id}`)
+      .then((data) => data.data[0])
+      .catch((err) => err);
+  },
+  updateNote({id, changes}) {
+    return instance.put(`/notes/${id}`, {...changes})
       .then((data) => data.data)
       .catch((err) => err);
   },
@@ -24,7 +35,7 @@ export const Api = {
       .catch((err) => err);
   },
   getNotesByTag({searchValue, page}) {
-    return instance.get(`/notes?tags_like=${searchValue}&_page=${page}&_limit=25`)
+    return instance.get(`/notes?_sort=id&_order=desc&tags_like=${searchValue}&_page=${page}&_limit=25`)
       .then((data) => data.data)
       .catch((err) => err);
   },

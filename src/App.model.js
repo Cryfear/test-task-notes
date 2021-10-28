@@ -1,10 +1,13 @@
 import { createEffect, createStore } from "effector";
-import { Api } from "./api/api";
+import { Api as api, Api } from "./api/api";
 
 export const onSearchScrollFx = createEffect(
   // Поиск по скроллу
   async ({searchValue, page}) => {
-    return await Api.getNotesByTag({searchValue, page: page + 1});
+    return {
+      notes: await Api.getNotesByTag({searchValue, page: page + 1}),
+      page
+    }
   }
 );
 
@@ -18,9 +21,9 @@ export const notesInitialization = createEffect(async () => {
   return await Api.getNotes({page: 1}).then((data) => data);
 });
 
-export const addNote = createEffect(({name, content, tags}) => {
-  // Добавление заметки
-  return {name, content, tags};
+export const addNote = createEffect(async ({name, content, tags, id}) => {
+  notesInitialization();
+  return await api.addNote({name, content, tags, id});
 });
 
 export const deleteNote = createEffect(({id}) => {
@@ -30,26 +33,63 @@ export const deleteNote = createEffect(({id}) => {
   return {id};
 });
 
+export const updateNote = createEffect(async ({id, changes}) => {
+  Api.updateNote({id, changes}).then(() => notesInitialization());
+});
+
+export const openNote = createEffect(async ({id}) => {
+  return await Api.getNote({id})
+});
+
+export const emptyContentSwitcher = createEffect(() => true)
+
 export const appStore = createStore({
   notes: [],
+  openedNote: {
+    id: null,
+    content: null,
+    tags: [],
+    name: null
+  },
   searchPage: 0,
-  isEndSearch: false
-})
-  .on(addNote.doneData, (state, item) => {
-    if (state.notes.length > 0) {
-      const note = {
-        ...item,
-        id: state.notes[state.notes.length - 1].id + 1,
-      };
+  isEndSearch: false,
 
+  isEmptyContent: true, // there
+  isCreatingNote: false, // can be
+  isEditingNote: false // only one TRUE onetime
+})
+  .on(openNote.doneData, (state, note) => {
+    console.log(note)
+    if(note) {
       return {
         ...state,
-        notes: [...state.notes, {...note}],
+        openedNote: {...note},
+        isEditingNote: true,
+        isEmptyContent: false,
+        isCreatingNote: false
+      }
+    }
+
+    return state;
+  })
+  .on(addNote.doneData, (state, note) => {
+    if (state.notes.length > 0) {
+      return {
+        ...state,
+        notes: [{...note}, ...state.notes],
+        openedNote: {...note},
+        isEditingNote: true,
+        isEmptyContent: false,
+        isCreatingNote: false
       };
-    } else if (state.notes.length < 0 && item) { // выполняется в случае, если нет ни одной заметки
+    } else if (state.notes.length < 0 && note) { // выполняется в случае, если нет ни одной заметки
       return {
         ...state,
-        notes: [{...item, id: 1}],
+        notes: [{...note, id: 1}],
+        openedNote: {...note},
+        isEditingNote: true,
+        isEmptyContent: false,
+        isCreatingNote: false
       };
     }
 
@@ -60,29 +100,49 @@ export const appStore = createStore({
       ...state,
       notes: state.notes.filter((item) => {
         return item.id !== id;
-      })
+      }),
+      openedNote: {
+        id: null,
+        content: null,
+        tags: [],
+        name: null
+      },
+      isEditingNote: false,
+      isEmptyContent: true,
+      isCreatingNote: false
     }
   })
   .on(notesInitialization.doneData, (state, notes) => {
     return {
       ...state,
       notes: [...notes],
-      searchPage: state.searchPage + 1,
+      isEndSearch: false,
+      searchPage: 1,
     };
   })
   .on(setSearchNotesFx.doneData, (state, notes) => {
     return {
       ...state,
+      searchPage: 1,
+      isEndSearch: false,
       notes: [...notes],
     };
   })
-  .on(onSearchScrollFx.doneData, (state, notes) => {
-    console.log(notes);
+  .on(onSearchScrollFx.doneData, (state, {notes, page}) => {
     if (notes && notes.length > 0) {
       return {
+        ...state,
         notes: [...state.notes, ...notes],
-        searchPage: state.searchPage + 1,
+        isEndSearch: false,
+        searchPage: page,
       };
     }
     return {...state, isEndSearch: true};
+  })
+  .on(emptyContentSwitcher.done, (state) => {
+    return {
+      ...state,
+      isEmptyContent: false,
+      isCreatingNote: true
+    }
   });

@@ -52,9 +52,9 @@ export const NotesContainer = () => {
     setSearchValue(value);
 
     if (value) {
-      setSearchNotesFx({ searchValue: value.replace(/#/g, ""), page: 1 });
+      setSearchNotesFx({ searchValue: value.replace(/#/g, ""), page: $appStore.searchPage });
     } else notesInitialization();
-  }, []);
+  }, [$appStore.searchPage]);
 
   return (
     <Notes

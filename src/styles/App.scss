@@ -2,6 +2,10 @@
   display: flex;
 }
 
+body {
+  background-color: beige;
+}
+
 html, body, #root, .App, .notes, .tags, .content {
   height: 100%;
   box-sizing: border-box;
