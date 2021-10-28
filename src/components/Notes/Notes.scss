@@ -39,12 +39,12 @@
     margin-top: 5px;
 
     &-item {
-      width: 90%;
-      margin: 0 auto;
       list-style: none;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      width: 90%;
+      margin: 0 auto;
 
       &:last-child {
         margin-bottom: 5px;
@@ -55,6 +55,8 @@
         border: none;
         cursor: pointer;
         padding-right: 0;
+        position: relative;
+        z-index: 10;
 
         img {
           width: 26px;
@@ -70,5 +72,15 @@
     text-align: center;
     color: #ff4411;
     font-family: 'Signika', sans-serif;
+  }
+}
+
+.note-item-wrapper {
+  display: flex;
+  width: 90%;
+      margin: 0 auto;
+
+  &:last-child {
+    padding-bottom: 10px;
   }
 }
